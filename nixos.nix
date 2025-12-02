@@ -1,5 +1,6 @@
 { config, lib, ... }:
 let
+  cfg = config.programs.persist-retro;
   scriptFor = import ./gen-script.nix lib;
   concatMapFlatten = func: attrs:
     builtins.concatLists (builtins.attrValues (builtins.mapAttrs func attrs));
@@ -73,8 +74,12 @@ let
   ;
 in
 {
-  system.activationScripts.createPersistentStorageDirs.deps = [ "persist-retro" ];
-  system.activationScripts.persist-retro = {
-    text = scriptFor binds;
+  options.programs.persist-retro.enable = lib.mkEnableOption "persist-retro";
+
+  config = lib.mkIf cfg.enable {
+    system.activationScripts.createPersistentStorageDirs.deps = [ "persist-retro" ];
+    system.activationScripts.persist-retro = {
+      text = scriptFor binds;
+    };
   };
 }

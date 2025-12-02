@@ -1,5 +1,6 @@
 { config, lib, ... }:
 let
+  cfg = config.programs.persist-retro;
   scriptFor = import ./gen-script.nix lib;
   allMounts =
     builtins.concatLists
@@ -64,22 +65,26 @@ let
       allMounts);
 in
 {
-  home.activation = {
-    persist-retro =
-      lib.hm.dag.entryBefore
-        # before
-        [
-          "createAndMountPersistentStoragePaths"
-          "createTargetFileDirectories"
-        ]
-        (scriptFor binds)
-    ;
-    persist-retro-link-phase =
-      lib.hm.dag.entryBefore
-        [
-          "checkLinkTargets"
-        ]
-        (scriptFor links)
-    ;
+  options.programs.persist-retro.enable = lib.mkEnableOption "persist-retro";
+
+  config = lib.mkIf cfg.enable {
+    home.activation = {
+      persist-retro =
+        lib.hm.dag.entryBefore
+          # before
+          [
+            "createAndMountPersistentStoragePaths"
+            "createTargetFileDirectories"
+          ]
+          (scriptFor binds)
+      ;
+      persist-retro-link-phase =
+        lib.hm.dag.entryBefore
+          [
+            "checkLinkTargets"
+          ]
+          (scriptFor links)
+      ;
+    };
   };
 }
